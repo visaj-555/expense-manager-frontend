@@ -19,7 +19,7 @@ export interface CreateGoalPayload {
   targetDate?: string
 }
 
-export interface UpdateGoalPayload extends Partial<CreateGoalPayload> {}
+export type UpdateGoalPayload = Partial<CreateGoalPayload>
 
 export interface GoalQueryParams extends PaginationParams {
   orderBy?: string

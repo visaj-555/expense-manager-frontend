@@ -10,14 +10,6 @@ export function useAccounts(params?: AccountQueryParams) {
   })
 }
 
-export function useAccount(id: string) {
-  return useQuery({
-    queryKey: queryKeys.accounts.detail(id),
-    queryFn: () => accountsService.getById(id),
-    enabled: !!id,
-  })
-}
-
 export function useCreateAccount() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -49,13 +41,5 @@ export function useDeleteAccount() {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard })
     },
-  })
-}
-
-export function useArchiveAccount() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => accountsService.archive(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all }),
   })
 }

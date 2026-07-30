@@ -101,13 +101,13 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
       type: 'EXPENSE',
       amount: 0,
       transactionDate: new Date().toISOString().split('T')[0],
-      accountId: accounts[0]?.id ?? '',
+      accountId: accountsData?.data?.[0]?.id ?? '',
       categoryId: NONE_VALUE,
       paymentMethod: 'CASH',
       notes: '',
       location: '',
     })
-  }, [transaction, form, open, accounts])
+  }, [transaction, form, open, accountsData?.data])
 
   useEffect(() => {
     const currentCategoryId = form.getValues('categoryId')
@@ -227,7 +227,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                         />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="z-[100]">
+                    <SelectContent>
                       {accounts.map((a) => (
                         <SelectItem key={a.id} value={a.id}>
                           {a.name}
@@ -264,7 +264,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                         />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="z-[100]">
+                    <SelectContent>
                       <SelectItem value={NONE_VALUE}>None</SelectItem>
                       {filteredCategories.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
@@ -291,7 +291,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="z-[100]">
+                    <SelectContent>
                       {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((m) => (
                         <SelectItem key={m} value={m}>
                           {PAYMENT_METHOD_LABELS[m]}

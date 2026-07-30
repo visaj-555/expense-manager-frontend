@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { useLogout } from '@/hooks/auth/useLogout'
 import { useAppSelector } from '@/store/hooks'
 
@@ -41,7 +40,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       className={cn(
         'fixed inset-y-0 left-0 z-30 flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
-        collapsed ? 'w-[72px]' : 'w-64',
+        collapsed ? 'w-18' : 'w-64',
       )}
     >
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
@@ -74,7 +73,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               )
             }
           >
-            <Icon className="size-[18px] shrink-0" />
+            <Icon className="size-4.5 shrink-0" />
             {!collapsed ? <span>{label}</span> : null}
           </NavLink>
         ))}
@@ -92,7 +91,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           className={cn('w-full justify-start gap-3 text-muted-foreground hover:text-destructive', collapsed && 'justify-center px-2')}
           onClick={logout}
         >
-          <LogOut className="size-[18px]" />
+          <LogOut className="size-4.5" />
           {!collapsed ? 'Logout' : null}
         </Button>
       </div>

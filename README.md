@@ -1,16 +1,34 @@
-# React + Vite
+# Expense Manager Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Premium SaaS-style personal finance app (React + Vite + TypeScript + Tailwind + shadcn/ui).
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm run dev        # local development
+npm run build      # production build
+npm run lint       # ESLint (also runs on git push)
+npm run lint:fix  # auto-fix safe issues
+npm run typecheck  # TypeScript check
+```
 
-## React Compiler
+## Learn the codebase
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Read **[docs/FRONTEND_LEARNING_GUIDE.md](./docs/FRONTEND_LEARNING_GUIDE.md)** — every concept used in this project, mapped to real files, written for beginners who want to rebuild this without AI.
 
-## Expanding the ESLint configuration
+## Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React 19 + Vite
+- TypeScript
+- Tailwind CSS v4 + shadcn/ui
+- React Router
+- TanStack Query (server state)
+- Redux Toolkit (auth only)
+- React Hook Form + Zod
+- Axios + Recharts + Lucide
+
+## Git hooks
+
+Husky runs:
+- **pre-commit** → lint-staged (eslint on staged files)
+- **pre-push** → full `npm run lint`

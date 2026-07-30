@@ -41,7 +41,7 @@ export interface CreateTransactionPayload {
   location?: string
 }
 
-export interface UpdateTransactionPayload extends Partial<CreateTransactionPayload> {}
+export type UpdateTransactionPayload = Partial<CreateTransactionPayload>
 
 export interface TransactionQueryParams extends PaginationParams {
   accountId?: string

@@ -12,7 +12,7 @@ export default function AppLayout() {
       <main
         className={cn(
           'min-h-screen transition-all duration-300',
-          collapsed ? 'pl-[72px]' : 'pl-64',
+          collapsed ? 'pl-18' : 'pl-64',
         )}
       >
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

@@ -58,13 +58,13 @@ export default function AnalyticsPage() {
 
       <div className="flex flex-wrap gap-3">
         <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
-          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-35"><SelectValue /></SelectTrigger>
           <SelectContent>
             {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-          <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-30"><SelectValue /></SelectTrigger>
           <SelectContent>
             {[year - 1, year, year + 1].map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
           </SelectContent>

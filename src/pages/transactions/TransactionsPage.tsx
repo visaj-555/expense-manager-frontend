@@ -149,7 +149,7 @@ export default function TransactionsPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-full sm:w-[160px]">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -166,7 +166,7 @@ export default function TransactionsPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full sm:w-50">
             <SelectValue placeholder="Account" />
           </SelectTrigger>
           <SelectContent>
@@ -186,7 +186,7 @@ export default function TransactionsPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-full sm:w-[220px]">
+          <SelectTrigger className="w-full sm:w-55">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
