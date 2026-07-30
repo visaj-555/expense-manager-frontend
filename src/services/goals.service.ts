@@ -1,10 +1,13 @@
 import type { ApiResponse, PaginatedResponse } from '@/types/api.types'
 import type { CreateGoalPayload, Goal, GoalQueryParams, UpdateGoalPayload } from '@/types/goal.types'
 import { axiosInstance } from '@/api/axiosInstance'
+import { cleanParams } from '@/utils/cleanParams'
 
 export const goalsService = {
   getAll: async (params?: GoalQueryParams) => {
-    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Goal>>>('/goals', { params })
+    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Goal>>>('/goals', {
+      params: cleanParams(params as Record<string, unknown>),
+    })
     return data.data!
   },
 

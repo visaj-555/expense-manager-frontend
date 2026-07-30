@@ -6,10 +6,13 @@ import type {
   UpdateTransactionPayload,
 } from '@/types/transaction.types'
 import { axiosInstance } from '@/api/axiosInstance'
+import { cleanParams } from '@/utils/cleanParams'
 
 export const transactionsService = {
   getAll: async (params?: TransactionQueryParams) => {
-    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Transaction>>>('/transactions', { params })
+    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Transaction>>>('/transactions', {
+      params: cleanParams(params as Record<string, unknown>),
+    })
     return data.data!
   },
 

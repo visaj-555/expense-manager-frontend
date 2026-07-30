@@ -23,6 +23,8 @@ import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState, ErrorState } from '@/components/shared/States'
 import { PaginationControls } from '@/components/shared/PaginationControls'
 import { TransactionFormDialog } from '@/features/transactions/components/TransactionFormDialog'
+import { useAccounts } from '@/features/accounts/hooks/useAccounts'
+import { useCategories } from '@/features/categories/hooks/useCategories'
 import {
   useCreateTransaction,
   useDeleteTransaction,
@@ -36,19 +38,31 @@ import type { Transaction } from '@/types/transaction.types'
 import type { TransactionType } from '@/types/enums'
 import { getErrorMessage } from '@/utils/errorUtils'
 
+const ALL_VALUE = '__all__'
+
 export default function TransactionsPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<TransactionType | 'ALL'>('ALL')
+  const [accountFilter, setAccountFilter] = useState(ALL_VALUE)
+  const [categoryFilter, setCategoryFilter] = useState(ALL_VALUE)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
   const [viewId, setViewId] = useState<string | null>(null)
+
+  const { data: accountsData } = useAccounts({ page: 1, limit: 100, isArchived: false })
+  const { data: categoriesData } = useCategories({ page: 1, limit: 100, isArchived: false })
+
+  const accounts = accountsData?.data ?? []
+  const categories = categoriesData?.data ?? []
 
   const { data, isLoading, isError, error, refetch } = useTransactions({
     page,
     limit: DEFAULT_PAGE_SIZE,
     search: search || undefined,
     type: typeFilter === 'ALL' ? undefined : typeFilter,
+    accountId: accountFilter === ALL_VALUE ? undefined : accountFilter,
+    categoryId: categoryFilter === ALL_VALUE ? undefined : categoryFilter,
     orderBy: 'transactionDate',
     order: 'desc',
   })
@@ -78,13 +92,23 @@ export default function TransactionsPage() {
     }
 
     if (editing) {
-      updateTx.mutate({ id: editing.id, payload }, {
-        onSuccess: () => { toast.success('Updated'); setDialogOpen(false); setEditing(null) },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      })
+      updateTx.mutate(
+        { id: editing.id, payload },
+        {
+          onSuccess: () => {
+            toast.success('Updated')
+            setDialogOpen(false)
+            setEditing(null)
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      )
     } else {
       createTx.mutate(payload, {
-        onSuccess: () => { toast.success('Transaction added'); setDialogOpen(false) },
+        onSuccess: () => {
+          toast.success('Transaction added')
+          setDialogOpen(false)
+        },
         onError: (err) => toast.error(getErrorMessage(err)),
       })
     }
@@ -95,17 +119,84 @@ export default function TransactionsPage() {
       <PageHeader
         title="Transactions"
         description="Track all your income and expenses."
-        action={<Button onClick={() => { setEditing(null); setDialogOpen(true) }}><Plus className="size-4" /> Add Transaction</Button>}
+        action={
+          <Button
+            onClick={() => {
+              setEditing(null)
+              setDialogOpen(true)
+            }}
+          >
+            <Plus className="size-4" /> Add Transaction
+          </Button>
+        }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Input placeholder="Search transactions..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} className="max-w-xs" />
-        <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v as TransactionType | 'ALL'); setPage(1) }}>
-          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap">
+        <Input
+          placeholder="Search transactions..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
+          className="max-w-xs"
+        />
+
+        <Select
+          value={typeFilter}
+          onValueChange={(v) => {
+            setTypeFilter(v as TransactionType | 'ALL')
+            setPage(1)
+          }}
+        >
+          <SelectTrigger className="w-full sm:w-[160px]">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All Types</SelectItem>
             <SelectItem value="INCOME">Income</SelectItem>
             <SelectItem value="EXPENSE">Expense</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={accountFilter}
+          onValueChange={(v) => {
+            setAccountFilter(v)
+            setPage(1)
+          }}
+        >
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Account" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>All Accounts ({accounts.length})</SelectItem>
+            {accounts.map((account) => (
+              <SelectItem key={account.id} value={account.id}>
+                {account.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={categoryFilter}
+          onValueChange={(v) => {
+            setCategoryFilter(v)
+            setPage(1)
+          }}
+        >
+          <SelectTrigger className="w-full sm:w-[220px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>All Categories ({categories.length})</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.icon ? `${category.icon} ` : ''}
+                {category.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -115,7 +206,13 @@ export default function TransactionsPage() {
       ) : isError ? (
         <ErrorState message={getErrorMessage(error)} onRetry={() => refetch()} />
       ) : !data?.data.length ? (
-        <EmptyState icon={Receipt} title="No transactions" description="Add your first transaction to get started." actionLabel="Add Transaction" onAction={() => setDialogOpen(true)} />
+        <EmptyState
+          icon={Receipt}
+          title="No transactions"
+          description="Add your first transaction to get started."
+          actionLabel="Add Transaction"
+          onAction={() => setDialogOpen(true)}
+        />
       ) : (
         <>
           <div className="rounded-xl border bg-card">
@@ -135,24 +232,61 @@ export default function TransactionsPage() {
                 {data.data.map((tx) => (
                   <TableRow key={tx.id}>
                     <TableCell className="font-medium">{tx.title}</TableCell>
-                    <TableCell>{tx.category?.name ?? '—'}</TableCell>
+                    <TableCell>
+                      {tx.category ? (
+                        <span>
+                          {tx.category.icon ? `${tx.category.icon} ` : ''}
+                          {tx.category.name}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
                     <TableCell>{tx.account.name}</TableCell>
                     <TableCell>{formatDate(tx.transactionDate)}</TableCell>
-                    <TableCell><Badge variant={tx.type === 'INCOME' ? 'success' : 'secondary'}>{TRANSACTION_TYPE_LABELS[tx.type]}</Badge></TableCell>
-                    <TableCell className={`text-right font-semibold ${tx.type === 'INCOME' ? 'text-emerald-600' : ''}`}>
-                      {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
+                    <TableCell>
+                      <Badge variant={tx.type === 'INCOME' ? 'success' : 'secondary'}>
+                        {TRANSACTION_TYPE_LABELS[tx.type]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-semibold ${tx.type === 'INCOME' ? 'text-emerald-600' : ''}`}
+                    >
+                      {tx.type === 'INCOME' ? '+' : '-'}
+                      {formatCurrency(tx.amount)}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-8"><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-8">
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setViewId(tx.id)}><Eye className="size-4" /> View</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setEditing(tx); setDialogOpen(true) }}><Pencil className="size-4" /> Edit</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => {
-                            if (confirm('Delete this transaction?')) {
-                              deleteTx.mutate(tx.id, { onSuccess: () => toast.success('Deleted'), onError: (err) => toast.error(getErrorMessage(err)) })
-                            }
-                          }}><Trash2 className="size-4" /> Delete</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setViewId(tx.id)}>
+                            <Eye className="size-4" /> View
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditing(tx)
+                              setDialogOpen(true)
+                            }}
+                          >
+                            <Pencil className="size-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              if (confirm('Delete this transaction?')) {
+                                deleteTx.mutate(tx.id, {
+                                  onSuccess: () => toast.success('Deleted'),
+                                  onError: (err) => toast.error(getErrorMessage(err)),
+                                })
+                              }
+                            }}
+                          >
+                            <Trash2 className="size-4" /> Delete
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -165,20 +299,51 @@ export default function TransactionsPage() {
         </>
       )}
 
-      <TransactionFormDialog open={dialogOpen} onOpenChange={setDialogOpen} transaction={editing} onSubmit={handleSubmit} isLoading={createTx.isPending || updateTx.isPending} />
+      <TransactionFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        transaction={editing}
+        onSubmit={handleSubmit}
+        isLoading={createTx.isPending || updateTx.isPending}
+      />
 
       <Dialog open={!!viewId} onOpenChange={() => setViewId(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Transaction Details</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+          </DialogHeader>
           {viewTransaction ? (
             <dl className="space-y-3 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">Title</dt><dd className="font-medium">{viewTransaction.title}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Amount</dt><dd className="font-semibold">{formatCurrency(viewTransaction.amount)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Type</dt><dd>{TRANSACTION_TYPE_LABELS[viewTransaction.type]}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Account</dt><dd>{viewTransaction.account.name}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Category</dt><dd>{viewTransaction.category?.name ?? '—'}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Date</dt><dd>{formatDate(viewTransaction.transactionDate)}</dd></div>
-              {viewTransaction.notes ? <div><dt className="text-muted-foreground mb-1">Notes</dt><dd>{viewTransaction.notes}</dd></div> : null}
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Title</dt>
+                <dd className="font-medium">{viewTransaction.title}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Amount</dt>
+                <dd className="font-semibold">{formatCurrency(viewTransaction.amount)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Type</dt>
+                <dd>{TRANSACTION_TYPE_LABELS[viewTransaction.type]}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Account</dt>
+                <dd>{viewTransaction.account.name}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Category</dt>
+                <dd>{viewTransaction.category?.name ?? '—'}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Date</dt>
+                <dd>{formatDate(viewTransaction.transactionDate)}</dd>
+              </div>
+              {viewTransaction.notes ? (
+                <div>
+                  <dt className="mb-1 text-muted-foreground">Notes</dt>
+                  <dd>{viewTransaction.notes}</dd>
+                </div>
+              ) : null}
             </dl>
           ) : null}
         </DialogContent>

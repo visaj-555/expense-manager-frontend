@@ -1,10 +1,13 @@
 import type { ApiResponse, PaginatedResponse } from '@/types/api.types'
 import type { Account, AccountQueryParams, CreateAccountPayload, UpdateAccountPayload } from '@/types/account.types'
 import { axiosInstance } from '@/api/axiosInstance'
+import { cleanParams } from '@/utils/cleanParams'
 
 export const accountsService = {
   getAll: async (params?: AccountQueryParams) => {
-    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Account>>>('/accounts', { params })
+    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Account>>>('/accounts', {
+      params: cleanParams(params as Record<string, unknown>),
+    })
     return data.data!
   },
 

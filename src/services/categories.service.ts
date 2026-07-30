@@ -1,10 +1,13 @@
 import type { ApiResponse, PaginatedResponse } from '@/types/api.types'
 import type { Category, CategoryQueryParams, CreateCategoryPayload, UpdateCategoryPayload } from '@/types/category.types'
 import { axiosInstance } from '@/api/axiosInstance'
+import { cleanParams } from '@/utils/cleanParams'
 
 export const categoriesService = {
   getAll: async (params?: CategoryQueryParams) => {
-    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Category>>>('/categories', { params })
+    const { data } = await axiosInstance.get<ApiResponse<PaginatedResponse<Category>>>('/categories', {
+      params: cleanParams(params as Record<string, unknown>),
+    })
     return data.data!
   },
 
