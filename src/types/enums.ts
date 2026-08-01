@@ -1,4 +1,4 @@
-export type AccountType = 'CASH' | 'BANK' | 'CREDIT_CARD' | 'SAVINGS' | 'INVESTMENT' | 'WALLET'
+export type AccountType = 'BANK' | 'SAVINGS' | 'WALLET'
 export type CategoryType = 'EXPENSE' | 'INCOME'
 export type TransactionType = 'INCOME' | 'EXPENSE' | 'TRANSFER'
 export type PaymentMethod = 'CASH' | 'UPI' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'NET_BANKING' | 'WALLET'

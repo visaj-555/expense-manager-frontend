@@ -54,10 +54,16 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Total Balance"
-          value={formatCurrency(overview.totalBalance)}
+          title="Current Balance"
+          value={formatCurrency(overview.currentBalance)}
           icon={Wallet}
-          description="Across all accounts"
+          description="From bank accounts"
+        />
+        <StatCard
+          title="Current Wallet Balance"
+          value={formatCurrency(overview.currentWalletBalance)}
+          icon={PiggyBank}
+          description="From savings accounts"
         />
         <StatCard
           title="Monthly Income"
@@ -71,15 +77,15 @@ export default function DashboardPage() {
           icon={ArrowDownRight}
           trend={{ value: 'This month', positive: false }}
         />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Monthly Savings"
           value={formatCurrency(overview.monthlySavings)}
           icon={PiggyBank}
           description={`${formatPercent(overview.savingsRate)} savings rate`}
         />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Net Cash Flow" value={formatCurrency(overview.netCashFlow)} icon={TrendingUp} />
         <StatCard title="Investments" value={formatCurrency(overview.monthlyInvestments)} icon={Target} />
       </div>
@@ -103,7 +109,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ChartCard title="Top Categories" description="Biggest expense categories this month">
+        <ChartCard title="Top Categories" description="Biggest expense categories this month (all-time if none yet)">
           {monthlySummary.topCategories.length > 0 ? (
             <CategoryBarChart data={monthlySummary.topCategories} />
           ) : (

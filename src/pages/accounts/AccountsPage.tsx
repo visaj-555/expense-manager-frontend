@@ -45,7 +45,7 @@ export default function AccountsPage() {
   const updateAccount = useUpdateAccount()
   const deleteAccount = useDeleteAccount()
 
-  const handleSubmit = (values: { name: string; type: Account['type']; openingBalance: number }) => {
+  const handleSubmit = (values: { name: string; type: Account['type']; currentBalance: number }) => {
     if (editing) {
       updateAccount.mutate(
         { id: editing.id, payload: values },
@@ -81,7 +81,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Accounts"
-        description="Manage your bank accounts, wallets, and cash."
+        description="Manage your bank and savings accounts."
         action={
           <Button onClick={() => { setEditing(null); setDialogOpen(true) }}>
             <Plus className="size-4" />
@@ -122,7 +122,7 @@ export default function AccountsPage() {
                   <div>
                     <CardTitle className="text-base">{account.name}</CardTitle>
                     <Badge variant="secondary" className="mt-1">
-                      {ACCOUNT_TYPE_LABELS[account.type]}
+                      {ACCOUNT_TYPE_LABELS[account.type] ?? account.type}
                     </Badge>
                   </div>
                   <DropdownMenu>

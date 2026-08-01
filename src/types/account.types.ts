@@ -5,7 +5,6 @@ export interface Account {
   userId: string
   name: string
   type: AccountType
-  openingBalance: number
   isArchived: boolean
   createdAt: string
   updatedAt: string
@@ -16,13 +15,13 @@ export interface Account {
 export interface CreateAccountPayload {
   name: string
   type: AccountType
-  openingBalance: number
+  currentBalance: number
 }
 
 export interface UpdateAccountPayload {
   name?: string
   type?: AccountType
-  openingBalance?: number
+  currentBalance?: number
   isArchived?: boolean
 }
 
@@ -33,3 +32,5 @@ export interface AccountQueryParams extends PaginationParams {
   orderBy?: 'name' | 'createdAt' | 'updatedAt'
   order?: SortOrder
 }
+
+export type { AccountType }

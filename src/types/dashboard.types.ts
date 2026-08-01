@@ -1,5 +1,6 @@
 export interface DashboardOverview {
-  totalBalance: number
+  currentBalance: number
+  currentWalletBalance: number
   monthlyIncome: number
   monthlyExpense: number
   monthlySavings: number

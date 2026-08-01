@@ -1,11 +1,8 @@
-import type { AccountType, CategoryType, PaymentMethod, TransactionType } from './enums'
+import type { AccountType, CategoryType, PaymentMethod, TransactionType } from '@/types/enums'
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
-  CASH: 'Cash',
   BANK: 'Bank',
-  CREDIT_CARD: 'Credit Card',
   SAVINGS: 'Savings',
-  INVESTMENT: 'Investment',
   WALLET: 'Wallet',
 }
 

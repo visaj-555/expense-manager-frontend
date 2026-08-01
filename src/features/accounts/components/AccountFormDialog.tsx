@@ -17,10 +17,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ACCOUNT_TYPE_LABELS } from '@/constants/enums'
 import type { Account, AccountType } from '@/types/account.types'
 
+/** Create/edit only allows Bank & Savings as requested; Wallet kept in enum for dashboard. */
+const ACCOUNT_TYPE_OPTIONS = ['BANK', 'SAVINGS'] as const satisfies readonly AccountType[]
+
 const accountSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  type: z.enum(['CASH', 'BANK', 'CREDIT_CARD', 'SAVINGS', 'INVESTMENT', 'WALLET'] as const),
-  openingBalance: z.coerce.number().min(0, 'Must be 0 or more'),
+  type: z.enum(ACCOUNT_TYPE_OPTIONS),
+  currentBalance: z.coerce.number().min(0, 'Must be 0 or more'),
 })
 
 type AccountFormValues = z.infer<typeof accountSchema>
@@ -36,14 +39,18 @@ interface AccountFormDialogProps {
 export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoading }: AccountFormDialogProps) {
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
-    defaultValues: { name: '', type: 'BANK', openingBalance: 0 },
+    defaultValues: { name: '', type: 'BANK', currentBalance: 0 },
   })
 
   useEffect(() => {
     if (account) {
-      form.reset({ name: account.name, type: account.type, openingBalance: account.openingBalance })
+      form.reset({
+        name: account.name,
+        type: account.type === 'BANK' || account.type === 'SAVINGS' ? account.type : 'BANK',
+        currentBalance: account.currentBalance,
+      })
     } else {
-      form.reset({ name: '', type: 'BANK', openingBalance: 0 })
+      form.reset({ name: '', type: 'BANK', currentBalance: 0 })
     }
   }, [account, form, open])
 
@@ -53,7 +60,7 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
         <DialogHeader>
           <DialogTitle>{account ? 'Edit Account' : 'Create Account'}</DialogTitle>
           <DialogDescription>
-            {account ? 'Update account details.' : 'Add a new account to track your finances.'}
+            {account ? 'Update account details.' : 'Add a bank or savings account.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -65,7 +72,7 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
                 <FormItem>
                   <FormLabel>Account Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. HDFC Savings" {...field} />
+                    <Input placeholder="e.g. HDFC Bank" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -84,7 +91,7 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(Object.keys(ACCOUNT_TYPE_LABELS) as AccountType[]).map((type) => (
+                      {ACCOUNT_TYPE_OPTIONS.map((type) => (
                         <SelectItem key={type} value={type}>
                           {ACCOUNT_TYPE_LABELS[type]}
                         </SelectItem>
@@ -97,10 +104,10 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
             />
             <FormField
               control={form.control}
-              name="openingBalance"
+              name="currentBalance"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Opening Balance</FormLabel>
+                  <FormLabel>Current Balance</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.01" min="0" {...field} />
                   </FormControl>
