@@ -81,7 +81,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Accounts"
-        description="Manage your bank and savings accounts."
+        description="Manage your bank, savings, and cash."
         action={
           <Button onClick={() => { setEditing(null); setDialogOpen(true) }}>
             <Plus className="size-4" />

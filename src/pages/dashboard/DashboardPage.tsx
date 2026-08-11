@@ -1,6 +1,7 @@
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Banknote,
   Lightbulb,
   PiggyBank,
   Target,
@@ -60,10 +61,10 @@ export default function DashboardPage() {
           description="From bank accounts"
         />
         <StatCard
-          title="Current Wallet Balance"
+          title="Current Cash Balance"
           value={formatCurrency(overview.currentWalletBalance)}
-          icon={PiggyBank}
-          description="From savings accounts"
+          icon={Banknote}
+          description="Cash in hand"
         />
         <StatCard
           title="Monthly Income"
@@ -87,7 +88,12 @@ export default function DashboardPage() {
           description={`${formatPercent(overview.savingsRate)} savings rate`}
         />
         <StatCard title="Net Cash Flow" value={formatCurrency(overview.netCashFlow)} icon={TrendingUp} />
-        <StatCard title="Investments" value={formatCurrency(overview.monthlyInvestments)} icon={Target} />
+        <StatCard
+          title="Investments"
+          value={formatCurrency(overview.monthlyInvestments)}
+          icon={Target}
+          description="Total SIP"
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

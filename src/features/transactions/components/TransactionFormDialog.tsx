@@ -76,7 +76,10 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
   })
 
   const txType = form.watch('type')
+  const selectedDate = form.watch('transactionDate')
   const filteredCategories = categories.filter((c) => c.type === txType)
+  const today = new Date().toISOString().split('T')[0]
+  const isPastDate = Boolean(selectedDate && selectedDate < today)
 
   useEffect(() => {
     if (!open) return
@@ -131,7 +134,9 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
-          <DialogDescription>Record income or expense transactions.</DialogDescription>
+          <DialogDescription>
+            Record income or expense. Past dates fill in history without changing today&apos;s balance.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -198,6 +203,11 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
+                  {isPastDate ? (
+                    <p className="text-xs text-muted-foreground">
+                      History catch-up — today&apos;s bank/cash stays the same. Today&apos;s date changes the live balance.
+                    </p>
+                  ) : null}
                   <FormMessage />
                 </FormItem>
               )}

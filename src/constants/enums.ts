@@ -3,7 +3,7 @@ import type { AccountType, CategoryType, PaymentMethod, TransactionType } from '
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   BANK: 'Bank',
   SAVINGS: 'Savings',
-  WALLET: 'Wallet',
+  WALLET: 'Cash',
 }
 
 export const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {

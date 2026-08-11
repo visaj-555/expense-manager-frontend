@@ -17,8 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ACCOUNT_TYPE_LABELS } from '@/constants/enums'
 import type { Account, AccountType } from '@/types/account.types'
 
-/** Create/edit only allows Bank & Savings as requested; Wallet kept in enum for dashboard. */
-const ACCOUNT_TYPE_OPTIONS = ['BANK', 'SAVINGS'] as const satisfies readonly AccountType[]
+const ACCOUNT_TYPE_OPTIONS = ['BANK', 'SAVINGS', 'WALLET'] as const satisfies readonly AccountType[]
 
 const accountSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -46,7 +45,7 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
     if (account) {
       form.reset({
         name: account.name,
-        type: account.type === 'BANK' || account.type === 'SAVINGS' ? account.type : 'BANK',
+        type: account.type,
         currentBalance: account.currentBalance,
       })
     } else {
@@ -60,7 +59,7 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
         <DialogHeader>
           <DialogTitle>{account ? 'Edit Account' : 'Create Account'}</DialogTitle>
           <DialogDescription>
-            {account ? 'Update account details.' : 'Add a bank or savings account.'}
+            {account ? 'Update account details.' : 'Add a bank, savings, or cash account.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
