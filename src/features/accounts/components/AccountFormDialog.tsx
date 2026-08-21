@@ -59,7 +59,9 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
         <DialogHeader>
           <DialogTitle>{account ? 'Edit Account' : 'Create Account'}</DialogTitle>
           <DialogDescription>
-            {account ? 'Update account details.' : 'Add a bank, savings, or cash account.'}
+            {account
+              ? 'Rename or change type. To hardcode today\'s amount, use Set what I have now on the card.'
+              : 'Add a bank, savings, or cash account. Enter what is in it right now — not the opening amount.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -101,19 +103,25 @@ export function AccountFormDialog({ open, onOpenChange, account, onSubmit, isLoa
                 </FormItem>
               )}
             />
+            {!account ? (
             <FormField
               control={form.control}
               name="currentBalance"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Balance</FormLabel>
+                  <FormLabel>What do you have right now?</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.01" min="0" {...field} />
                   </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    You do not need to remember the opening balance. Catch-up expenses you add later
+                    will not change this snapshot.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            ) : null}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

@@ -39,6 +39,7 @@ export interface CreateTransactionPayload {
   paymentMethod?: PaymentMethod
   notes?: string
   location?: string
+  preserveCurrentBalance?: boolean
 }
 
 export type UpdateTransactionPayload = Partial<CreateTransactionPayload>

@@ -82,6 +82,7 @@ export default function TransactionsPage() {
     paymentMethod?: string
     notes?: string
     location?: string
+    preserveCurrentBalance?: boolean
   }) => {
     const payload = {
       ...values,

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { CreditCard, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Banknote, CreditCard, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,6 +17,7 @@ import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState, ErrorState } from '@/components/shared/States'
 import { PaginationControls } from '@/components/shared/PaginationControls'
 import { AccountFormDialog } from '@/features/accounts/components/AccountFormDialog'
+import { SetBalanceDialog } from '@/features/accounts/components/SetBalanceDialog'
 import {
   useAccounts,
   useCreateAccount,
@@ -24,7 +26,7 @@ import {
 } from '@/features/accounts/hooks/useAccounts'
 import { ACCOUNT_TYPE_LABELS } from '@/constants/enums'
 import { DEFAULT_PAGE_SIZE } from '@/constants/enums'
-import { formatCurrency } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 import type { Account } from '@/types/account.types'
 import { getErrorMessage } from '@/utils/errorUtils'
 
@@ -33,6 +35,7 @@ export default function AccountsPage() {
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Account | null>(null)
+  const [balanceAccount, setBalanceAccount] = useState<Account | null>(null)
 
   const { data, isLoading, isError, error, refetch } = useAccounts({
     page,
@@ -48,7 +51,7 @@ export default function AccountsPage() {
   const handleSubmit = (values: { name: string; type: Account['type']; currentBalance: number }) => {
     if (editing) {
       updateAccount.mutate(
-        { id: editing.id, payload: values },
+        { id: editing.id, payload: { name: values.name, type: values.type } },
         {
           onSuccess: () => {
             toast.success('Account updated')
@@ -69,6 +72,20 @@ export default function AccountsPage() {
     }
   }
 
+  const handleSetBalance = (currentBalance: number) => {
+    if (!balanceAccount) return
+    updateAccount.mutate(
+      { id: balanceAccount.id, payload: { currentBalance } },
+      {
+        onSuccess: () => {
+          toast.success(`Saved ${formatCurrency(currentBalance)} as today's amount`)
+          setBalanceAccount(null)
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    )
+  }
+
   const handleDelete = (account: Account) => {
     if (!confirm(`Delete "${account.name}"?`)) return
     deleteAccount.mutate(account.id, {
@@ -81,7 +98,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Accounts"
-        description="Manage your bank, savings, and cash."
+        description="Set what you have today. History is a diary — it will not rewrite this number."
         action={
           <Button onClick={() => { setEditing(null); setDialogOpen(true) }}>
             <Plus className="size-4" />
@@ -109,12 +126,18 @@ export default function AccountsPage() {
         <EmptyState
           icon={CreditCard}
           title="No accounts yet"
-          description="Create your first account to start tracking balances."
+          description="Create your first account and type what is in it right now."
           actionLabel="Add Account"
           onAction={() => setDialogOpen(true)}
         />
       ) : (
         <>
+          <Alert>
+            <AlertDescription>
+              Wrong number? Count cash or open the bank app, then tap <strong>Set what I have now</strong>.
+              Adding old expenses after that will not push the balance negative.
+            </AlertDescription>
+          </Alert>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.data.map((account) => (
               <Card key={account.id} className="transition-shadow hover:shadow-md">
@@ -132,6 +155,9 @@ export default function AccountsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setBalanceAccount(account)}>
+                        <Banknote className="size-4" /> Set what I have now
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setEditing(account); setDialogOpen(true) }}>
                         <Pencil className="size-4" /> Edit
                       </DropdownMenuItem>
@@ -141,9 +167,31 @@ export default function AccountsPage() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold">{formatCurrency(account.currentBalance)}</p>
+                <CardContent className="space-y-3">
+                  <p
+                    className={cn(
+                      'text-2xl font-semibold',
+                      account.currentBalance < 0 && 'text-destructive',
+                    )}
+                  >
+                    {formatCurrency(account.currentBalance)}
+                  </p>
                   <p className="text-xs text-muted-foreground">{account.transactionCount} transactions</p>
+                  {account.currentBalance < 0 ? (
+                    <p className="text-xs text-destructive">
+                      This snapshot looks off. Set the real amount instead of chasing opening balance.
+                    </p>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setBalanceAccount(account)}
+                  >
+                    <Banknote className="size-4" />
+                    {account.type === 'WALLET' ? 'I counted this cash' : 'Set what I have now'}
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -158,6 +206,15 @@ export default function AccountsPage() {
         account={editing}
         onSubmit={handleSubmit}
         isLoading={createAccount.isPending || updateAccount.isPending}
+      />
+      <SetBalanceDialog
+        open={Boolean(balanceAccount)}
+        onOpenChange={(open) => {
+          if (!open) setBalanceAccount(null)
+        }}
+        account={balanceAccount}
+        onSubmit={handleSetBalance}
+        isLoading={updateAccount.isPending}
       />
     </div>
   )

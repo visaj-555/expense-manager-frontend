@@ -9,6 +9,7 @@ import VerifyForgotOtpPage from '@/pages/auth/VerifyForgotOtpPage'
 import VerifyOtpPage from '@/pages/auth/VerifyOtpPage'
 import AccountsPage from '@/pages/accounts/AccountsPage'
 import AnalyticsPage from '@/pages/analytics/AnalyticsPage'
+import AutomatePage from '@/pages/automate/AutomatePage'
 import CategoriesPage from '@/pages/categories/CategoriesPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import GoalsPage from '@/pages/goals/GoalsPage'
@@ -37,6 +38,7 @@ function AppRoutesContent() {
           <Route path="/accounts" element={<AccountsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
+          <Route path="/automate" element={<AutomatePage />} />
           <Route path="/goals" element={<GoalsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/settings" element={<SettingsPage />} />

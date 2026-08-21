@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -8,6 +9,7 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -15,8 +17,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ChartCard, AccountDistributionChart, CategoryBarChart, SpendingTrendChart } from '@/components/charts/FinanceCharts'
 import { PageHeader, StatCard } from '@/components/shared/PageHeader'
 import { ErrorState } from '@/components/shared/States'
+import { SetBalanceDialog } from '@/features/accounts/components/SetBalanceDialog'
+import { useAccounts, useUpdateAccount } from '@/features/accounts/hooks/useAccounts'
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
 import { formatCurrency, formatDate, formatPercent } from '@/lib/utils'
+import type { Account } from '@/types/account.types'
 import { getErrorMessage } from '@/utils/errorUtils'
 
 function DashboardSkeleton() {
@@ -37,6 +42,9 @@ function DashboardSkeleton() {
 
 export default function DashboardPage() {
   const { data, isLoading, isError, error, refetch } = useDashboard()
+  const { data: accountsData } = useAccounts({ page: 1, limit: 100, isArchived: false })
+  const updateAccount = useUpdateAccount()
+  const [balanceAccount, setBalanceAccount] = useState<Account | null>(null)
 
   if (isLoading) return <DashboardSkeleton />
 
@@ -45,12 +53,31 @@ export default function DashboardPage() {
   }
 
   const { overview, accountDistribution, monthlySummary, recentTransactions, goalsProgress, spendingTrend, insights } = data
+  const accounts = accountsData?.data ?? []
+  const bankAccounts = accounts.filter((account) => account.type === 'BANK')
+  const cashAccounts = accounts.filter((account) => account.type === 'WALLET')
+  const bankAccount = bankAccounts.length === 1 ? bankAccounts[0] : null
+  const cashAccount = cashAccounts.length === 1 ? cashAccounts[0] : null
+
+  const handleSetBalance = (currentBalance: number) => {
+    if (!balanceAccount) return
+    updateAccount.mutate(
+      { id: balanceAccount.id, payload: { currentBalance } },
+      {
+        onSuccess: () => {
+          toast.success(`Saved ${formatCurrency(currentBalance)} as today's amount`)
+          setBalanceAccount(null)
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    )
+  }
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Dashboard"
-        description="Your financial overview at a glance."
+        description="Tap a balance to hardcode what you have now. Catch-up expenses will not rewrite it."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -58,13 +85,15 @@ export default function DashboardPage() {
           title="Current Balance"
           value={formatCurrency(overview.currentBalance)}
           icon={Wallet}
-          description="From bank accounts"
+          description={bankAccount ? 'Tap to set what the bank shows' : 'From bank accounts'}
+          onClick={bankAccount ? () => setBalanceAccount(bankAccount) : undefined}
         />
         <StatCard
           title="Current Cash Balance"
           value={formatCurrency(overview.currentWalletBalance)}
           icon={Banknote}
-          description="Cash in hand"
+          description={cashAccount ? 'Tap after you count cash' : 'Cash in hand'}
+          onClick={cashAccount ? () => setBalanceAccount(cashAccount) : undefined}
         />
         <StatCard
           title="Monthly Income"
@@ -204,6 +233,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <SetBalanceDialog
+        open={Boolean(balanceAccount)}
+        onOpenChange={(open) => {
+          if (!open) setBalanceAccount(null)
+        }}
+        account={balanceAccount}
+        onSubmit={handleSetBalance}
+        isLoading={updateAccount.isPending}
+      />
     </div>
   )
 }

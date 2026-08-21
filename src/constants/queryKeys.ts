@@ -27,4 +27,9 @@ export const queryKeys = {
     cashflow: ['analytics', 'cashflow'] as const,
     topExpenses: ['analytics', 'top-expenses'] as const,
   },
+  automations: {
+    all: ['automations'] as const,
+    list: (params?: Record<string, unknown>) => ['automations', 'list', params] as const,
+    detail: (id: string) => ['automations', 'detail', id] as const,
+  },
 }

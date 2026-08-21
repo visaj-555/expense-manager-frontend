@@ -1,4 +1,4 @@
-import type { AccountType, CategoryType, PaymentMethod, TransactionType } from '@/types/enums'
+import type { AccountType, CategoryType, PaymentMethod, RecurringFrequency, TransactionType } from '@/types/enums'
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   BANK: 'Bank',
@@ -24,6 +24,13 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   DEBIT_CARD: 'Debit Card',
   NET_BANKING: 'Net Banking',
   WALLET: 'Wallet',
+}
+
+export const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
+  DAILY: 'Daily',
+  WEEKLY: 'Weekly',
+  MONTHLY: 'Monthly',
+  YEARLY: 'Yearly',
 }
 
 export const CHART_COLORS = [

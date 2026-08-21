@@ -3,6 +3,7 @@ export type CategoryType = 'EXPENSE' | 'INCOME'
 export type TransactionType = 'INCOME' | 'EXPENSE' | 'TRANSFER'
 export type PaymentMethod = 'CASH' | 'UPI' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'NET_BANKING' | 'WALLET'
 export type GoalStatus = 'COMPLETED' | 'IN_PROGRESS'
+export type RecurringFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
 export type SortOrder = 'asc' | 'desc'
 
 export interface PaginationMeta {

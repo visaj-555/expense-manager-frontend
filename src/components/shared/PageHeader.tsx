@@ -27,11 +27,31 @@ interface StatCardProps {
   icon?: LucideIcon
   trend?: { value: string; positive?: boolean }
   className?: string
+  onClick?: () => void
 }
 
-export function StatCard({ title, value, description, icon: Icon, trend, className }: StatCardProps) {
+export function StatCard({ title, value, description, icon: Icon, trend, className, onClick }: StatCardProps) {
   return (
-    <div className={cn('rounded-xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md', className)}>
+    <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onClick()
+              }
+            }
+          : undefined
+      }
+      className={cn(
+        'rounded-xl border bg-card p-5 text-left shadow-sm transition-shadow hover:shadow-md',
+        onClick && 'cursor-pointer hover:border-primary/40',
+        className,
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>

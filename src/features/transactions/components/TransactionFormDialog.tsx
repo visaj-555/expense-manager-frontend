@@ -11,13 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PAYMENT_METHOD_LABELS, TRANSACTION_TYPE_LABELS } from '@/constants/enums'
 import { useAccounts } from '@/features/accounts/hooks/useAccounts'
 import { useCategories } from '@/features/categories/hooks/useCategories'
+import { cn, formatCurrency, localISODate } from '@/lib/utils'
 import type { PaymentMethod, TransactionType } from '@/types/enums'
 import type { Transaction } from '@/types/transaction.types'
 
@@ -33,6 +35,7 @@ const transactionSchema = z.object({
   paymentMethod: z.enum(['CASH', 'UPI', 'CREDIT_CARD', 'DEBIT_CARD', 'NET_BANKING', 'WALLET'] as const).optional(),
   notes: z.string().max(500).optional(),
   location: z.string().max(200).optional(),
+  preserveCurrentBalance: z.boolean(),
 })
 
 type TransactionFormValues = z.infer<typeof transactionSchema>
@@ -66,20 +69,31 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
       title: '',
       type: 'EXPENSE',
       amount: 0,
-      transactionDate: new Date().toISOString().split('T')[0],
+      transactionDate: localISODate(),
       accountId: '',
       categoryId: NONE_VALUE,
       paymentMethod: 'CASH',
       notes: '',
       location: '',
+      preserveCurrentBalance: true,
     },
   })
 
   const txType = form.watch('type')
   const selectedDate = form.watch('transactionDate')
+  const selectedAccountId = form.watch('accountId')
+  const amount = form.watch('amount')
+  const preserveCurrentBalance = form.watch('preserveCurrentBalance')
   const filteredCategories = categories.filter((c) => c.type === txType)
-  const today = new Date().toISOString().split('T')[0]
+  const today = localISODate()
   const isPastDate = Boolean(selectedDate && selectedDate < today)
+  const selectedAccount = accounts.find((account) => account.id === selectedAccountId)
+  const liveProjection =
+    !preserveCurrentBalance && selectedAccount && amount > 0
+      ? txType === 'EXPENSE'
+        ? selectedAccount.currentBalance - amount
+        : selectedAccount.currentBalance + amount
+      : null
 
   useEffect(() => {
     if (!open) return
@@ -95,6 +109,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
         paymentMethod: transaction.paymentMethod ?? 'CASH',
         notes: transaction.notes ?? '',
         location: transaction.location ?? '',
+        preserveCurrentBalance: true,
       })
       return
     }
@@ -103,12 +118,13 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
       title: '',
       type: 'EXPENSE',
       amount: 0,
-      transactionDate: new Date().toISOString().split('T')[0],
+      transactionDate: localISODate(),
       accountId: accountsData?.data?.[0]?.id ?? '',
       categoryId: NONE_VALUE,
       paymentMethod: 'CASH',
       notes: '',
       location: '',
+      preserveCurrentBalance: true,
     })
   }, [transaction, form, open, accountsData?.data])
 
@@ -135,7 +151,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
           <DialogDescription>
-            Record income or expense. Past dates fill in history without changing today&apos;s balance.
+            Record income or expense. Today&apos;s cash/bank stays put unless you choose &quot;this just happened&quot;.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -204,9 +220,9 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                     <Input type="date" {...field} />
                   </FormControl>
                   {isPastDate ? (
-                    <p className="text-xs text-muted-foreground">
-                      History catch-up — today&apos;s bank/cash stays the same. Today&apos;s date changes the live balance.
-                    </p>
+                    <FormDescription>
+                      Past date — this is catch-up history. Today&apos;s snapshot stays the same unless you pick live update.
+                    </FormDescription>
                   ) : null}
                   <FormMessage />
                 </FormItem>
@@ -327,6 +343,59 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="preserveCurrentBalance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Today&apos;s balance</FormLabel>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => field.onChange(true)}
+                      className={cn(
+                        'rounded-lg border px-3 py-3 text-left text-sm transition-colors',
+                        field.value
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-muted/50',
+                      )}
+                    >
+                      <span className="block font-medium">Keep today&apos;s amount</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        Already happened. Will not go negative from this entry.
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => field.onChange(false)}
+                      className={cn(
+                        'rounded-lg border px-3 py-3 text-left text-sm transition-colors',
+                        !field.value
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-muted/50',
+                      )}
+                    >
+                      <span className="block font-medium">This just happened</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        Money moved now. Update the live cash/bank number.
+                      </span>
+                    </button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {liveProjection != null && liveProjection < 0 ? (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  This will take {selectedAccount?.name} to {formatCurrency(liveProjection)}.
+                  If the spend already happened, keep today&apos;s amount instead — then set the real
+                  balance on Accounts if the snapshot is wrong.
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
