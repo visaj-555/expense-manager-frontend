@@ -1,6 +1,7 @@
 export interface DashboardOverview {
   currentBalance: number
   currentWalletBalance: number
+  currentFdBalance: number
   monthlyIncome: number
   monthlyExpense: number
   monthlySavings: number

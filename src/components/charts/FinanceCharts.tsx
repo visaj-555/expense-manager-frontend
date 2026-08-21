@@ -45,8 +45,8 @@ export function SpendingTrendChart({ data }: SpendingTrendChartProps) {
     <ResponsiveContainer width="100%" height={280}>
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-        <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${v / 1000}k`} />
+        <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'currentColor' }} />
+        <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} tickFormatter={(v) => `₹${v / 1000}k`} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Line type="monotone" dataKey="expense" stroke="#0d9488" strokeWidth={2} dot={{ r: 4 }} />
       </LineChart>
@@ -83,8 +83,8 @@ export function CategoryBarChart({ data }: CategoryBarChartProps) {
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${v / 1000}k`} />
-        <YAxis type="category" dataKey="category" width={100} tick={{ fontSize: 12 }} />
+        <XAxis type="number" tick={{ fontSize: 12, fill: 'currentColor' }} tickFormatter={(v) => `₹${v / 1000}k`} />
+        <YAxis type="category" dataKey="category" width={100} tick={{ fontSize: 12, fill: 'currentColor' }} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Bar dataKey="amount" fill="#0d9488" radius={[0, 4, 4, 0]} />
       </BarChart>
@@ -101,8 +101,8 @@ export function CashflowChart({ data }: CashflowChartProps) {
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-        <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${v / 1000}k`} />
+        <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'currentColor' }} />
+        <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} tickFormatter={(v) => `₹${v / 1000}k`} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Legend />
         <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} />

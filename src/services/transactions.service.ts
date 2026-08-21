@@ -26,6 +26,13 @@ export const transactionsService = {
     return data.data!
   },
 
+  createBulk: async (payloads: CreateTransactionPayload[]) => {
+    const { data } = await axiosInstance.post<
+      ApiResponse<{ count: number; data: Transaction[] }>
+    >('/transactions/bulk', { transactions: payloads })
+    return data.data!
+  },
+
   update: async (id: string, payload: UpdateTransactionPayload) => {
     const { data } = await axiosInstance.patch<ApiResponse<Transaction>>(`/transactions/${id}`, payload)
     return data.data!

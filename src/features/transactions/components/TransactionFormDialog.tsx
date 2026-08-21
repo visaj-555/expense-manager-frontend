@@ -20,10 +20,28 @@ import { PAYMENT_METHOD_LABELS, TRANSACTION_TYPE_LABELS } from '@/constants/enum
 import { useAccounts } from '@/features/accounts/hooks/useAccounts'
 import { useCategories } from '@/features/categories/hooks/useCategories'
 import { cn, formatCurrency, localISODate } from '@/lib/utils'
+import type { Account } from '@/types/account.types'
 import type { PaymentMethod, TransactionType } from '@/types/enums'
 import type { Transaction } from '@/types/transaction.types'
 
 const NONE_VALUE = '__none__'
+const CASH_METHODS = new Set<PaymentMethod>(['CASH', 'WALLET'])
+
+function isCatchUpDate(dateStr: string, today = localISODate()) {
+  return Boolean(dateStr && dateStr !== today)
+}
+
+function accountIdForPayment(accounts: Account[], paymentMethod?: PaymentMethod) {
+  if (paymentMethod && CASH_METHODS.has(paymentMethod)) {
+    return accounts.find((account) => account.type === 'WALLET')?.id ?? accounts[0]?.id ?? ''
+  }
+
+  return (
+    accounts.find((account) => account.type === 'BANK' || account.type === 'SAVINGS')?.id ??
+    accounts[0]?.id ??
+    ''
+  )
+}
 
 const transactionSchema = z.object({
   title: z.string().min(1, 'Title is required').max(150),
@@ -60,7 +78,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
     isArchived: false,
   })
 
-  const accounts = accountsData?.data ?? []
+  const accounts = (accountsData?.data ?? []).filter((account) => account.type !== 'FIXED_DEPOSIT')
   const categories = categoriesData?.data ?? []
 
   const form = useForm<TransactionFormValues>({
@@ -75,7 +93,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
       paymentMethod: 'CASH',
       notes: '',
       location: '',
-      preserveCurrentBalance: true,
+      preserveCurrentBalance: false,
     },
   })
 
@@ -85,11 +103,11 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
   const amount = form.watch('amount')
   const preserveCurrentBalance = form.watch('preserveCurrentBalance')
   const filteredCategories = categories.filter((c) => c.type === txType)
-  const today = localISODate()
-  const isPastDate = Boolean(selectedDate && selectedDate < today)
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId)
+  const catchUpDate = isCatchUpDate(selectedDate)
+  const willUpdateLive = !catchUpDate || !preserveCurrentBalance
   const liveProjection =
-    !preserveCurrentBalance && selectedAccount && amount > 0
+    willUpdateLive && selectedAccount && amount > 0
       ? txType === 'EXPENSE'
         ? selectedAccount.currentBalance - amount
         : selectedAccount.currentBalance + amount
@@ -109,7 +127,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
         paymentMethod: transaction.paymentMethod ?? 'CASH',
         notes: transaction.notes ?? '',
         location: transaction.location ?? '',
-        preserveCurrentBalance: true,
+        preserveCurrentBalance: isCatchUpDate(transaction.transactionDate.split('T')[0]),
       })
       return
     }
@@ -119,12 +137,15 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
       type: 'EXPENSE',
       amount: 0,
       transactionDate: localISODate(),
-      accountId: accountsData?.data?.[0]?.id ?? '',
+      accountId: accountIdForPayment(
+        (accountsData?.data ?? []).filter((account) => account.type !== 'FIXED_DEPOSIT'),
+        'CASH',
+      ),
       categoryId: NONE_VALUE,
       paymentMethod: 'CASH',
       notes: '',
       location: '',
-      preserveCurrentBalance: true,
+      preserveCurrentBalance: false,
     })
   }, [transaction, form, open, accountsData?.data])
 
@@ -142,6 +163,9 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
     onSubmit({
       ...values,
       categoryId: values.categoryId === NONE_VALUE ? undefined : values.categoryId,
+      preserveCurrentBalance: isCatchUpDate(values.transactionDate)
+        ? values.preserveCurrentBalance
+        : false,
     })
   }
 
@@ -151,7 +175,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
           <DialogDescription>
-            Record income or expense. Today&apos;s cash/bank stays put unless you choose &quot;this just happened&quot;.
+            Record income or expense. A spend dated today updates the selected account. Catch-up dates keep today&apos;s snapshot.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -217,13 +241,27 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                 <FormItem>
                   <FormLabel>Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input
+                      type="date"
+                      {...field}
+                      onChange={(event) => {
+                        field.onChange(event)
+                        form.setValue(
+                          'preserveCurrentBalance',
+                          isCatchUpDate(event.target.value),
+                        )
+                      }}
+                    />
                   </FormControl>
-                  {isPastDate ? (
+                  {catchUpDate ? (
                     <FormDescription>
-                      Past date — this is catch-up history. Today&apos;s snapshot stays the same unless you pick live update.
+                      Catch-up date — today&apos;s cash/bank snapshot stays the same unless you pick live update.
                     </FormDescription>
-                  ) : null}
+                  ) : (
+                    <FormDescription>
+                      Today — this amount is deducted from the selected account (Cash, bank, etc.).
+                    </FormDescription>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -256,7 +294,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                     <SelectContent>
                       {accounts.map((a) => (
                         <SelectItem key={a.id} value={a.id}>
-                          {a.name}
+                          {a.name} · {formatCurrency(a.currentBalance)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -311,7 +349,19 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Payment Method</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      const nextAccountId = accountIdForPayment(
+                        accounts,
+                        value as PaymentMethod,
+                      )
+                      if (nextAccountId) {
+                        form.setValue('accountId', nextAccountId)
+                      }
+                    }}
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue />
@@ -344,6 +394,7 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
               )}
             />
 
+            {catchUpDate ? (
             <FormField
               control={form.control}
               name="preserveCurrentBalance"
@@ -386,13 +437,12 @@ export function TransactionFormDialog({ open, onOpenChange, transaction, onSubmi
                 </FormItem>
               )}
             />
+            ) : null}
 
             {liveProjection != null && liveProjection < 0 ? (
               <Alert variant="destructive">
                 <AlertDescription>
                   This will take {selectedAccount?.name} to {formatCurrency(liveProjection)}.
-                  If the spend already happened, keep today&apos;s amount instead — then set the real
-                  balance on Accounts if the snapshot is wrong.
                 </AlertDescription>
               </Alert>
             ) : null}

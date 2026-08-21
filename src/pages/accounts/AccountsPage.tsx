@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banknote, CreditCard, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Banknote, CreditCard, Landmark, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -24,10 +24,10 @@ import {
   useDeleteAccount,
   useUpdateAccount,
 } from '@/features/accounts/hooks/useAccounts'
-import { ACCOUNT_TYPE_LABELS } from '@/constants/enums'
-import { DEFAULT_PAGE_SIZE } from '@/constants/enums'
-import { cn, formatCurrency } from '@/lib/utils'
+import { ACCOUNT_TYPE_LABELS, DEFAULT_PAGE_SIZE, FD_COMPOUNDING_LABELS } from '@/constants/enums'
+import { cn, formatCurrency, formatDate } from '@/lib/utils'
 import type { Account } from '@/types/account.types'
+import type { AccountFormValues } from '@/features/accounts/components/AccountFormDialog'
 import { getErrorMessage } from '@/utils/errorUtils'
 
 export default function AccountsPage() {
@@ -48,10 +48,39 @@ export default function AccountsPage() {
   const updateAccount = useUpdateAccount()
   const deleteAccount = useDeleteAccount()
 
-  const handleSubmit = (values: { name: string; type: Account['type']; currentBalance: number }) => {
+  const handleSubmit = (values: AccountFormValues) => {
+    const isFd = values.type === 'FIXED_DEPOSIT'
+    const payload = isFd
+      ? {
+          name: values.name,
+          type: values.type,
+          currentBalance: values.currentBalance,
+          interestRate: values.interestRate,
+          startDate: values.startDate,
+          tenureMonths: values.tenureMonths,
+          compounding: values.compounding,
+        }
+      : {
+          name: values.name,
+          type: values.type,
+          currentBalance: values.currentBalance,
+        }
+
     if (editing) {
       updateAccount.mutate(
-        { id: editing.id, payload: { name: values.name, type: values.type } },
+        {
+          id: editing.id,
+          payload: isFd
+            ? {
+                name: values.name,
+                currentBalance: values.currentBalance,
+                interestRate: values.interestRate,
+                startDate: values.startDate,
+                tenureMonths: values.tenureMonths,
+                compounding: values.compounding,
+              }
+            : { name: values.name },
+        },
         {
           onSuccess: () => {
             toast.success('Account updated')
@@ -61,15 +90,16 @@ export default function AccountsPage() {
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       )
-    } else {
-      createAccount.mutate(values, {
-        onSuccess: () => {
-          toast.success('Account created')
-          setDialogOpen(false)
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      })
+      return
     }
+
+    createAccount.mutate(payload, {
+      onSuccess: () => {
+        toast.success(isFd ? 'Fixed Deposit added' : 'Account created')
+        setDialogOpen(false)
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    })
   }
 
   const handleSetBalance = (currentBalance: number) => {
@@ -98,7 +128,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Accounts"
-        description="Set what you have today. History is a diary — it will not rewrite this number."
+        description="Bank and cash are snapshots. Fixed Deposits grow when you open Accounts or the Dashboard — no daily job."
         action={
           <Button onClick={() => { setEditing(null); setDialogOpen(true) }}>
             <Plus className="size-4" />
@@ -139,7 +169,9 @@ export default function AccountsPage() {
             </AlertDescription>
           </Alert>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data.data.map((account) => (
+            {data.data.map((account) => {
+              const isFd = account.type === 'FIXED_DEPOSIT'
+              return (
               <Card key={account.id} className="transition-shadow hover:shadow-md">
                 <CardHeader className="flex flex-row items-start justify-between pb-2">
                   <div>
@@ -155,9 +187,11 @@ export default function AccountsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setBalanceAccount(account)}>
-                        <Banknote className="size-4" /> Set what I have now
-                      </DropdownMenuItem>
+                      {!isFd ? (
+                        <DropdownMenuItem onClick={() => setBalanceAccount(account)}>
+                          <Banknote className="size-4" /> Set what I have now
+                        </DropdownMenuItem>
+                      ) : null}
                       <DropdownMenuItem onClick={() => { setEditing(account); setDialogOpen(true) }}>
                         <Pencil className="size-4" /> Edit
                       </DropdownMenuItem>
@@ -176,25 +210,54 @@ export default function AccountsPage() {
                   >
                     {formatCurrency(account.currentBalance)}
                   </p>
-                  <p className="text-xs text-muted-foreground">{account.transactionCount} transactions</p>
-                  {account.currentBalance < 0 ? (
+                  {isFd && account.fd ? (
+                    <div className="space-y-2 text-xs text-muted-foreground">
+                      <p className="flex items-center gap-1.5">
+                        <Landmark className="size-3.5" />
+                        {account.fd.isMatured
+                          ? 'Matured — value is locked at maturity amount'
+                          : `Grown from ${formatCurrency(account.fd.principal)} · ${account.fd.interestRate}% ${FD_COMPOUNDING_LABELS[account.fd.compounding]}`}
+                      </p>
+                      <p>
+                        Interest so far {formatCurrency(account.fd.accruedInterest)} · matures{' '}
+                        {formatDate(account.fd.maturityDate)} at {formatCurrency(account.fd.maturityValue)}
+                      </p>
+                      <p>
+                        {account.fd.isMatured
+                          ? '0 days left'
+                          : `${account.fd.daysRemaining} days left`}
+                      </p>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${Math.min(account.fd.progressPercent, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">{account.transactionCount} transactions</p>
+                  )}
+                  {account.currentBalance < 0 && !isFd ? (
                     <p className="text-xs text-destructive">
                       This snapshot looks off. Set the real amount instead of chasing opening balance.
                     </p>
                   ) : null}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setBalanceAccount(account)}
-                  >
-                    <Banknote className="size-4" />
-                    {account.type === 'WALLET' ? 'I counted this cash' : 'Set what I have now'}
-                  </Button>
+                  {!isFd ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setBalanceAccount(account)}
+                    >
+                      <Banknote className="size-4" />
+                      {account.type === 'WALLET' ? 'I counted this cash' : 'Set what I have now'}
+                    </Button>
+                  ) : null}
                 </CardContent>
               </Card>
-            ))}
+              )
+            })}
           </div>
           <PaginationControls meta={data.meta} onPageChange={setPage} />
         </>

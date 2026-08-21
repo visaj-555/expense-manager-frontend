@@ -34,6 +34,19 @@ export function useCreateTransaction() {
   })
 }
 
+export function useCreateBulkTransactions() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payloads: CreateTransactionPayload[]) =>
+      transactionsService.createBulk(payloads),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard })
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all })
+    },
+  })
+}
+
 export function useUpdateTransaction() {
   const queryClient = useQueryClient()
   return useMutation({

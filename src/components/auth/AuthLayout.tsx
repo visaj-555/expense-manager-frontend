@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Wallet } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { ThemeToggle } from '@/features/theme/ThemeToggle'
 
 interface AuthLayoutProps {
   title: string
@@ -28,7 +29,10 @@ export default function AuthLayout({ title, description, children, footer }: Aut
         <p className="text-sm text-teal-200/70">© {new Date().getFullYear()} Expense Manager</p>
       </div>
 
-      <div className="flex items-center justify-center p-6 sm:p-10">
+      <div className="relative flex items-center justify-center p-6 sm:p-10">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle compact />
+        </div>
         <Card className="w-full max-w-md border-0 shadow-xl sm:border">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary lg:hidden">

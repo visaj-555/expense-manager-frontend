@@ -4,6 +4,7 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   BANK: 'Bank',
   SAVINGS: 'Savings',
   WALLET: 'Cash',
+  FIXED_DEPOSIT: 'Fixed Deposit',
 }
 
 export const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
@@ -24,6 +25,12 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   DEBIT_CARD: 'Debit Card',
   NET_BANKING: 'Net Banking',
   WALLET: 'Wallet',
+}
+
+export const FD_COMPOUNDING_LABELS: Record<'MONTHLY' | 'QUARTERLY' | 'YEARLY', string> = {
+  MONTHLY: 'Monthly',
+  QUARTERLY: 'Quarterly',
+  YEARLY: 'Yearly',
 }
 
 export const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {

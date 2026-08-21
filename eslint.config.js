@@ -43,7 +43,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/components/ui/**/*.{ts,tsx}'],
+    files: ['src/components/ui/**/*.{ts,tsx}', 'src/features/theme/ThemeProvider.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, MoreHorizontal, Pencil, Plus, Receipt, Trash2 } from 'lucide-react'
+import { Eye, MoreHorizontal, Pencil, Plus, Receipt, Table2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,9 +23,11 @@ import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState, ErrorState } from '@/components/shared/States'
 import { PaginationControls } from '@/components/shared/PaginationControls'
 import { TransactionFormDialog } from '@/features/transactions/components/TransactionFormDialog'
+import { BulkTransactionDialog } from '@/features/transactions/components/BulkTransactionDialog'
 import { useAccounts } from '@/features/accounts/hooks/useAccounts'
 import { useCategories } from '@/features/categories/hooks/useCategories'
 import {
+  useCreateBulkTransactions,
   useCreateTransaction,
   useDeleteTransaction,
   useTransaction,
@@ -34,7 +36,7 @@ import {
 } from '@/features/transactions/hooks/useTransactions'
 import { DEFAULT_PAGE_SIZE, TRANSACTION_TYPE_LABELS } from '@/constants/enums'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import type { Transaction } from '@/types/transaction.types'
+import type { CreateTransactionPayload, Transaction } from '@/types/transaction.types'
 import type { TransactionType } from '@/types/enums'
 import { getErrorMessage } from '@/utils/errorUtils'
 
@@ -47,6 +49,7 @@ export default function TransactionsPage() {
   const [accountFilter, setAccountFilter] = useState(ALL_VALUE)
   const [categoryFilter, setCategoryFilter] = useState(ALL_VALUE)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
   const [viewId, setViewId] = useState<string | null>(null)
 
@@ -69,6 +72,7 @@ export default function TransactionsPage() {
 
   const { data: viewTransaction } = useTransaction(viewId ?? '')
   const createTx = useCreateTransaction()
+  const createBulkTx = useCreateBulkTransactions()
   const updateTx = useUpdateTransaction()
   const deleteTx = useDeleteTransaction()
 
@@ -115,20 +119,39 @@ export default function TransactionsPage() {
     }
   }
 
+  const handleBulkSubmit = (payloads: CreateTransactionPayload[]) => {
+    createBulkTx.mutate(payloads, {
+      onSuccess: (result) => {
+        toast.success(`${result.count} transactions added`)
+        setBulkOpen(false)
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    })
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Transactions"
         description="Track all your income and expenses."
         action={
-          <Button
-            onClick={() => {
-              setEditing(null)
-              setDialogOpen(true)
-            }}
-          >
-            <Plus className="size-4" /> Add Transaction
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBulkOpen(true)}
+            >
+              <Table2 className="size-4" /> Add Bulk
+            </Button>
+            <Button
+              onClick={() => {
+                setEditing(null)
+                setDialogOpen(true)
+              }}
+            >
+              <Plus className="size-4" /> Add Transaction
+            </Button>
+          </div>
         }
       />
 
@@ -306,6 +329,14 @@ export default function TransactionsPage() {
         transaction={editing}
         onSubmit={handleSubmit}
         isLoading={createTx.isPending || updateTx.isPending}
+      />
+      <BulkTransactionDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        accounts={accounts}
+        categories={categories}
+        onSubmit={handleBulkSubmit}
+        isLoading={createBulkTx.isPending}
       />
 
       <Dialog open={!!viewId} onOpenChange={() => setViewId(null)}>

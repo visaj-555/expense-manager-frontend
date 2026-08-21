@@ -56,6 +56,7 @@ export function AutomationFormDialog({
   isLoading,
 }: AutomationFormDialogProps) {
   const expenseCategories = categories.filter((category) => category.type === 'EXPENSE')
+  const spendAccounts = accounts.filter((account) => account.type !== 'FIXED_DEPOSIT')
   const form = useForm<AutomationFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -74,7 +75,8 @@ export function AutomationFormDialog({
 
     const expenseOnly = categories.filter((category) => category.type === 'EXPENSE')
     const sip = expenseOnly.find((category) => category.name.toLowerCase() === 'sip')
-    const bank = accounts.find((account) => account.type === 'BANK') ?? accounts[0]
+    const spendable = accounts.filter((account) => account.type !== 'FIXED_DEPOSIT')
+    const bank = spendable.find((account) => account.type === 'BANK') ?? spendable[0]
 
     if (automation) {
       form.reset({
@@ -213,14 +215,14 @@ export function AutomationFormDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>From account</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || undefined} disabled={accounts.length === 0}>
+                  <Select onValueChange={field.onChange} value={field.value || undefined} disabled={spendAccounts.length === 0}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={accounts.length === 0 ? 'Create an account first' : 'Select account'} />
+                        <SelectValue placeholder={spendAccounts.length === 0 ? 'Create an account first' : 'Select account'} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {accounts.map((account) => (
+                      {spendAccounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
                           {account.name}
                         </SelectItem>
@@ -263,7 +265,7 @@ export function AutomationFormDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading || accounts.length === 0 || expenseCategories.length === 0}>
+              <Button type="submit" disabled={isLoading || spendAccounts.length === 0 || expenseCategories.length === 0}>
                 {automation ? 'Save changes' : 'Start automation'}
               </Button>
             </DialogFooter>

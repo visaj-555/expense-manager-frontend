@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useLogout } from '@/hooks/auth/useLogout'
 import { useAppSelector } from '@/store/hooks'
+import { ThemeToggle } from '@/features/theme/ThemeToggle'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -88,14 +89,17 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           </div>
         ) : null}
-        <Button
-          variant="ghost"
-          className={cn('w-full justify-start gap-3 text-muted-foreground hover:text-destructive', collapsed && 'justify-center px-2')}
-          onClick={logout}
-        >
-          <LogOut className="size-4.5" />
-          {!collapsed ? 'Logout' : null}
-        </Button>
+        <div className={cn('flex items-center gap-1', collapsed && 'flex-col')}>
+          <ThemeToggle compact />
+          <Button
+            variant="ghost"
+            className={cn('flex-1 justify-start gap-3 text-muted-foreground hover:text-destructive', collapsed && 'w-full justify-center px-2')}
+            onClick={logout}
+          >
+            <LogOut className="size-4.5" />
+            {!collapsed ? 'Logout' : null}
+          </Button>
+        </div>
       </div>
     </aside>
   )

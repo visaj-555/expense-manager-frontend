@@ -8,6 +8,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { DashboardCardToggles } from '@/features/dashboard/components/DashboardCardToggles'
+import { useDashboardCards } from '@/features/dashboard/hooks/useDashboardCards'
+import { ThemeToggle } from '@/features/theme/ThemeToggle'
 import { authService } from '@/services/auth.service'
 import { useAppSelector } from '@/store/hooks'
 import { PASSWORD_HINT, PASSWORD_REGEX, getErrorMessage } from '@/utils/errorUtils'
@@ -26,6 +29,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>
 
 export default function SettingsPage() {
   const user = useAppSelector((state) => state.auth.user)
+  const { visibility, setCard, reset } = useDashboardCards()
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -55,6 +59,31 @@ export default function SettingsPage() {
           <div className="flex justify-between"><span className="text-muted-foreground">Name</span><span className="font-medium">{user?.name}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span className="font-medium">{user?.email}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Role</span><span className="font-medium capitalize">{user?.role?.toLowerCase()}</span></div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+          <CardDescription>Light or dark. System follows your device.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemeToggle />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>Dashboard cards</CardTitle>
+            <CardDescription>Show or hide tiles on the dashboard. Saved on this device.</CardDescription>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={reset}>
+            Show all
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <DashboardCardToggles visibility={visibility} onToggle={setCard} />
         </CardContent>
       </Card>
 
