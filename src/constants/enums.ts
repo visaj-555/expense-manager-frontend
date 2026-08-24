@@ -41,16 +41,14 @@ export const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
 }
 
 export const CHART_COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-  '#14b8a6',
-  '#6366f1',
-  '#f59e0b',
-  '#ec4899',
-  '#8b5cf6',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--chart-6)',
+  'var(--chart-7)',
+  'var(--chart-8)',
 ]
 
 export const DEFAULT_PAGE_SIZE = 10
