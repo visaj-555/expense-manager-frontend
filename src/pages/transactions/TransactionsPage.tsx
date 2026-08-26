@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Eye, MoreHorizontal, Pencil, Plus, Receipt, Table2, Trash2 } from 'lucide-react'
+import { Eye, MoreHorizontal, Pencil, Plus, Receipt, Table2, Trash2, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -24,6 +25,8 @@ import { EmptyState, ErrorState } from '@/components/shared/States'
 import { PaginationControls } from '@/components/shared/PaginationControls'
 import { TransactionFormDialog } from '@/features/transactions/components/TransactionFormDialog'
 import { BulkTransactionDialog } from '@/features/transactions/components/BulkTransactionDialog'
+import { ExportDataForm } from '@/features/export/components/ExportDataForm'
+import { useExportData } from '@/features/export/hooks/useExportData'
 import { useAccounts } from '@/features/accounts/hooks/useAccounts'
 import { useCategories } from '@/features/categories/hooks/useCategories'
 import {
@@ -50,6 +53,7 @@ export default function TransactionsPage() {
   const [categoryFilter, setCategoryFilter] = useState(ALL_VALUE)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
   const [viewId, setViewId] = useState<string | null>(null)
 
@@ -73,6 +77,7 @@ export default function TransactionsPage() {
   const { data: viewTransaction } = useTransaction(viewId ?? '')
   const createTx = useCreateTransaction()
   const createBulkTx = useCreateBulkTransactions()
+  const exportData = useExportData()
   const updateTx = useUpdateTransaction()
   const deleteTx = useDeleteTransaction()
 
@@ -136,6 +141,9 @@ export default function TransactionsPage() {
         description="Track all your income and expenses."
         action={
           <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => setExportOpen(true)}>
+              <Download className="size-4" /> Export
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -338,6 +346,30 @@ export default function TransactionsPage() {
         onSubmit={handleBulkSubmit}
         isLoading={createBulkTx.isPending}
       />
+      <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Export data</DialogTitle>
+            <DialogDescription>
+              Download a month, a year, or everything as JSON or Excel.
+            </DialogDescription>
+          </DialogHeader>
+          <ExportDataForm
+            isLoading={exportData.isPending}
+            onExport={(request) =>
+              exportData.mutate(request, {
+                onSuccess: (payload) => {
+                  toast.success(
+                    `Downloaded ${payload.summary.transactions} transaction${payload.summary.transactions === 1 ? '' : 's'}`,
+                  )
+                  setExportOpen(false)
+                },
+                onError: (err) => toast.error(getErrorMessage(err)),
+              })
+            }
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!viewId} onOpenChange={() => setViewId(null)}>
         <DialogContent>

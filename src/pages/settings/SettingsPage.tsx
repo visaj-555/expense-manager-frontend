@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { DashboardCardToggles } from '@/features/dashboard/components/DashboardCardToggles'
 import { useDashboardCards } from '@/features/dashboard/hooks/useDashboardCards'
+import { ExportDataForm } from '@/features/export/components/ExportDataForm'
+import { useExportData } from '@/features/export/hooks/useExportData'
 import { ThemeToggle } from '@/features/theme/ThemeToggle'
 import { authService } from '@/services/auth.service'
 import { useAppSelector } from '@/store/hooks'
@@ -30,6 +32,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>
 export default function SettingsPage() {
   const user = useAppSelector((state) => state.auth.user)
   const { visibility, setCard, reset } = useDashboardCards()
+  const exportData = useExportData()
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -84,6 +87,30 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <DashboardCardToggles visibility={visibility} onToggle={setCard} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Export data</CardTitle>
+          <CardDescription>
+            Download a month, a year, or everything as JSON or Excel. Accounts and categories are always included so names stay readable.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ExportDataForm
+            isLoading={exportData.isPending}
+            onExport={(request) =>
+              exportData.mutate(request, {
+                onSuccess: (payload) => {
+                  toast.success(
+                    `Downloaded ${payload.summary.transactions} transaction${payload.summary.transactions === 1 ? '' : 's'}`,
+                  )
+                },
+                onError: (err) => toast.error(getErrorMessage(err)),
+              })
+            }
+          />
         </CardContent>
       </Card>
 
