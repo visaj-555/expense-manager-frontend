@@ -83,6 +83,8 @@ export function BulkTransactionDialog({
   const [defaultDate, setDefaultDate] = useState(localISODate)
   const [defaultType, setDefaultType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE')
   const [defaultAccount, setDefaultAccount] = useState(defaultAccountId)
+  /** When true, catch-up dates keep today's Cash/Bank snapshot unchanged. */
+  const [preserveCurrentBalance, setPreserveCurrentBalance] = useState(false)
   const [rows, setRows] = useState<BulkRow[]>(() =>
     Array.from({ length: STARTER_ROWS }, () =>
       makeRow({ date: localISODate(), accountId: defaultAccountId, type: 'EXPENSE' }),
@@ -97,6 +99,7 @@ export function BulkTransactionDialog({
       setDefaultDate(date)
       setDefaultType('EXPENSE')
       setDefaultAccount(defaultAccountId)
+      setPreserveCurrentBalance(false)
       setRows(
         Array.from({ length: STARTER_ROWS }, () =>
           makeRow({ date, accountId: defaultAccountId, type: 'EXPENSE' }),
@@ -195,6 +198,7 @@ export function BulkTransactionDialog({
           ? 'CASH'
           : 'UPI') as PaymentMethod,
         notes: row.notes.trim() || undefined,
+        preserveCurrentBalance,
       })),
     )
   }
@@ -210,7 +214,7 @@ export function BulkTransactionDialog({
             <DialogTitle>Add bulk transactions</DialogTitle>
             <DialogDescription>
               Type down the list like a sheet. Paste from Excel or Notion (Date, Title, Amount, Category).
-              Empty rows are ignored.
+              Empty rows are ignored. Amounts update Cash/Bank by default.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -420,6 +424,15 @@ export function BulkTransactionDialog({
               {readyRows.length} ready
               {readyRows.length > 0 ? ` · ${formatCurrency(total)}` : ''}
             </p>
+            <label className="flex cursor-pointer items-center gap-2 text-muted-foreground">
+              <input
+                type="checkbox"
+                className="size-4 accent-foreground"
+                checked={preserveCurrentBalance}
+                onChange={(event) => setPreserveCurrentBalance(event.target.checked)}
+              />
+              Keep today&apos;s Cash/Bank unchanged (catch-up)
+            </label>
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
