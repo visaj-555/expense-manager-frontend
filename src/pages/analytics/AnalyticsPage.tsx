@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { BarChart3 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { BarChart3, ScanSearch } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -54,7 +56,17 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Analytics" description="Deep insights into your spending and income patterns." />
+      <PageHeader
+        title="Analytics"
+        description="A quick read of monthly, yearly, and cashflow patterns."
+        action={
+          <Button asChild>
+            <Link to="/analytics/deep">
+              <ScanSearch className="size-4" /> Deep Analysis
+            </Link>
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap gap-3">
         <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>

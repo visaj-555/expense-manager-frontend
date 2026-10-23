@@ -2,12 +2,15 @@ import type { ApiResponse } from '@/types/api.types'
 import type {
   CashflowTrend,
   CategoryAnalysis,
+  DeepInsights,
+  DeepInsightsParams,
   MonthlyAnalyticsParams,
   TopExpense,
   TrendAmount,
   YearlyAnalyticsParams,
 } from '@/types/analytics.types'
 import { axiosInstance } from '@/api/axiosInstance'
+import { cleanParams } from '@/utils/cleanParams'
 
 export const analyticsService = {
   getMonthlyCategoryAnalysis: async (params?: MonthlyAnalyticsParams) => {
@@ -36,6 +39,13 @@ export const analyticsService = {
 
   getTopExpenses: async () => {
     const { data } = await axiosInstance.get<ApiResponse<TopExpense[]>>('/analytics/top-expenses')
+    return data.data!
+  },
+
+  getDeepInsights: async (params?: DeepInsightsParams) => {
+    const { data } = await axiosInstance.get<ApiResponse<DeepInsights>>('/analytics/deep-insights', {
+      params: cleanParams(params as Record<string, unknown>),
+    })
     return data.data!
   },
 }

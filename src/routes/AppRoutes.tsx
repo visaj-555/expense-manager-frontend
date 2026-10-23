@@ -9,12 +9,14 @@ import VerifyForgotOtpPage from '@/pages/auth/VerifyForgotOtpPage'
 import VerifyOtpPage from '@/pages/auth/VerifyOtpPage'
 import AccountsPage from '@/pages/accounts/AccountsPage'
 import AnalyticsPage from '@/pages/analytics/AnalyticsPage'
+import DeepAnalysisPage from '@/pages/analytics/DeepAnalysisPage'
 import AutomatePage from '@/pages/automate/AutomatePage'
 import CategoriesPage from '@/pages/categories/CategoriesPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import GoalsPage from '@/pages/goals/GoalsPage'
 import SettingsPage from '@/pages/settings/SettingsPage'
 import TransactionsPage from '@/pages/transactions/TransactionsPage'
+import TransfersPage from '@/pages/transfers/TransfersPage'
 import GuestRoute from '@/routes/GuestRoute'
 import ProtectedRoute from '@/routes/ProtectedRoute'
 
@@ -38,9 +40,11 @@ function AppRoutesContent() {
           <Route path="/accounts" element={<AccountsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
+          <Route path="/transfers" element={<TransfersPage />} />
           <Route path="/automate" element={<AutomatePage />} />
           <Route path="/goals" element={<GoalsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/analytics/deep" element={<DeepAnalysisPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>

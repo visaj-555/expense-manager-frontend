@@ -7,8 +7,10 @@ import {
   FolderOpen,
   LayoutDashboard,
   LogOut,
+  ArrowRightLeft,
   Receipt,
   Repeat,
+  ScanSearch,
   Settings,
   Target,
   Wallet,
@@ -24,9 +26,11 @@ const navItems = [
   { to: '/accounts', label: 'Accounts', icon: CreditCard },
   { to: '/categories', label: 'Categories', icon: FolderOpen },
   { to: '/transactions', label: 'Transactions', icon: Receipt },
+  { to: '/transfers', label: 'Transfers', icon: ArrowRightLeft },
   { to: '/automate', label: 'Automate', icon: Repeat },
   { to: '/goals', label: 'Goals', icon: Target },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/analytics/deep', label: 'Deep Analysis', icon: ScanSearch },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -66,6 +70,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <NavLink
             key={to}
             to={to}
+            end
             className={({ isActive }) =>
               cn(
                 'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',

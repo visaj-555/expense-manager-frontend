@@ -1,20 +1,18 @@
-import axios from 'axios';
-import { tokenStorage } from '../utils/tokenStorage';
-import type { ApiResponse } from '../types/api.types';
+import axios from "axios";
+import { tokenStorage } from "../utils/tokenStorage";
+import type { ApiResponse } from "../types/api.types";
 
 // API base URL
 const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  'http://localhost:3600/api/v1';
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1";
 
 // Create a reusable Axios instance
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
-
 
 // Runs BEFORE every request
 // Automatically adds the access token
@@ -28,7 +26,6 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-
 // Prevent multiple refresh requests at the same time
 let isRefreshing = false;
 
@@ -37,7 +34,6 @@ let refreshQueue: Array<{
   resolve: (token: string) => void;
   reject: (error: unknown) => void;
 }> = [];
-
 
 // Tell waiting requests whether refresh succeeded or failed
 function processQueue(error: unknown, token: string | null = null) {
@@ -51,7 +47,6 @@ function processQueue(error: unknown, token: string | null = null) {
 
   refreshQueue = [];
 }
-
 
 // Runs AFTER a response comes back
 axiosInstance.interceptors.response.use(
@@ -67,9 +62,9 @@ axiosInstance.interceptors.response.use(
     if (
       error.response?.status !== 401 ||
       originalRequest._retry ||
-      originalRequest.url?.includes('/auth/login') ||
-      originalRequest.url?.includes('/auth/refresh') ||
-      originalRequest.url?.includes('/auth/register')
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/refresh") ||
+      originalRequest.url?.includes("/auth/register")
     ) {
       return Promise.reject(error);
     }
@@ -82,7 +77,6 @@ axiosInstance.interceptors.response.use(
       tokenStorage.clearTokens();
       return Promise.reject(error);
     }
-
 
     // Someone else is already refreshing.
     // Put this request in the waiting queue.
@@ -99,7 +93,6 @@ axiosInstance.interceptors.response.use(
       });
     }
 
-
     // We are the first request to start refreshing
     originalRequest._retry = true;
     isRefreshing = true;
@@ -107,38 +100,26 @@ axiosInstance.interceptors.response.use(
     try {
       // Get new access + refresh tokens
       // Use plain axios to avoid triggering this interceptor again
-      const { data } =
-        await axios.post<
-          ApiResponse<{
-            accessToken: string;
-            refreshToken: string;
-          }>
-        >(
-          `${BASE_URL}/auth/refresh`,
-          { refreshToken },
-        );
+      const { data } = await axios.post<
+        ApiResponse<{
+          accessToken: string;
+          refreshToken: string;
+        }>
+      >(`${BASE_URL}/auth/refresh`, { refreshToken });
 
       // Extract the new tokens
-      const {
-        accessToken,
-        refreshToken: newRefreshToken,
-      } = data.data!;
+      const { accessToken, refreshToken: newRefreshToken } = data.data!;
 
       // Save new tokens
-      tokenStorage.setTokens(
-        accessToken,
-        newRefreshToken,
-      );
+      tokenStorage.setTokens(accessToken, newRefreshToken);
 
       // Give the new token to all waiting requests
       processQueue(null, accessToken);
 
       // Update and retry the original request
-      originalRequest.headers.Authorization =
-        `Bearer ${accessToken}`;
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
       return axiosInstance(originalRequest);
-
     } catch (refreshError) {
       // Refresh failed → fail all waiting requests
       processQueue(refreshError, null);
@@ -147,7 +128,6 @@ axiosInstance.interceptors.response.use(
       tokenStorage.clearTokens();
 
       return Promise.reject(refreshError);
-
     } finally {
       // Refresh operation is finished
       isRefreshing = false;

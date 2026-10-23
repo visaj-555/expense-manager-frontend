@@ -4,7 +4,7 @@
  * as a query string, because NestJS enableImplicitConversion can
  * turn the string "false" into boolean true.
  */
-export function cleanParams<T extends Record<string, unknown>>(params?: T): Partial<T> | undefined {
+export function cleanParams<T extends object>(params?: T): Partial<T> | undefined {
   if (!params) return undefined
 
   const cleaned: Record<string, unknown> = {}

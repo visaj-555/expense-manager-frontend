@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, MoreHorizontal, Pencil, Plus, Receipt, Table2, Trash2, Download } from 'lucide-react'
+import { Download, Eye, MoreHorizontal, Pencil, Plus, Receipt, Table2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,7 +40,7 @@ import {
 import { DEFAULT_PAGE_SIZE, TRANSACTION_TYPE_LABELS } from '@/constants/enums'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { CreateTransactionPayload, Transaction } from '@/types/transaction.types'
-import type { TransactionType } from '@/types/enums'
+import type { PaymentMethod, TransactionType } from '@/types/enums'
 import { getErrorMessage } from '@/utils/errorUtils'
 
 const ALL_VALUE = '__all__'
@@ -93,10 +93,10 @@ export default function TransactionsPage() {
     location?: string
     preserveCurrentBalance?: boolean
   }) => {
-    const payload = {
+    const payload: CreateTransactionPayload = {
       ...values,
       categoryId: values.categoryId || undefined,
-      paymentMethod: values.paymentMethod as Transaction['paymentMethod'],
+      paymentMethod: values.paymentMethod ? (values.paymentMethod as PaymentMethod) : undefined,
       notes: values.notes || undefined,
       location: values.location || undefined,
     }
@@ -138,17 +138,13 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Transactions"
-        description="Track all your income and expenses."
+        description="Spending and income only. Account-to-account moves are on Transfers."
         action={
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => setExportOpen(true)}>
               <Download className="size-4" /> Export
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setBulkOpen(true)}
-            >
+            <Button type="button" variant="outline" onClick={() => setBulkOpen(true)}>
               <Table2 className="size-4" /> Add Bulk
             </Button>
             <Button
@@ -163,6 +159,7 @@ export default function TransactionsPage() {
         }
       />
 
+      <div className="space-y-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap">
         <Input
           placeholder="Search transactions..."
@@ -330,6 +327,7 @@ export default function TransactionsPage() {
           <PaginationControls meta={data.meta} onPageChange={setPage} />
         </>
       )}
+      </div>
 
       <TransactionFormDialog
         open={dialogOpen}

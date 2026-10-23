@@ -1,7 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/constants/queryKeys'
 import { analyticsService } from '@/services/analytics.service'
-import type { MonthlyAnalyticsParams, YearlyAnalyticsParams } from '@/types/analytics.types'
+import type {
+  DeepInsightsParams,
+  MonthlyAnalyticsParams,
+  YearlyAnalyticsParams,
+} from '@/types/analytics.types'
 
 export function useMonthlyAnalytics(params?: MonthlyAnalyticsParams) {
   return useQuery({
@@ -36,5 +40,12 @@ export function useCategoryTrend(categoryId: string) {
     queryKey: queryKeys.analytics.categoryTrend(categoryId),
     queryFn: () => analyticsService.getCategoryTrend(categoryId),
     enabled: !!categoryId,
+  })
+}
+
+export function useDeepInsights(params: DeepInsightsParams) {
+  return useQuery({
+    queryKey: queryKeys.analytics.deep(params),
+    queryFn: () => analyticsService.getDeepInsights(params),
   })
 }

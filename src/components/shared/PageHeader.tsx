@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface PageHeaderProps {
   title: string
   description?: string
-  action?: React.ReactNode
+  action?: ReactNode
   className?: string
 }
 
@@ -23,7 +24,7 @@ export function PageHeader({ title, description, action, className }: PageHeader
 interface StatCardProps {
   title: string
   value: string
-  description?: string
+  description?: ReactNode
   icon?: LucideIcon
   trend?: { value: string; positive?: boolean }
   className?: string
@@ -56,7 +57,7 @@ export function StatCard({ title, value, description, icon: Icon, trend, classNa
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="text-2xl font-semibold tracking-tight">{value}</p>
-          {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
+          {description ? <div className="text-xs text-muted-foreground">{description}</div> : null}
           {trend ? (
             <p className={cn('text-xs font-medium', trend.positive ? 'text-emerald-600' : 'text-red-600')}>
               {trend.value}

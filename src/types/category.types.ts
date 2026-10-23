@@ -1,5 +1,7 @@
 import type { CategoryType, PaginationParams, SortOrder } from '@/types/enums'
 
+export type { CategoryType }
+
 export interface Category {
   id: string
   userId: string
